@@ -1,0 +1,31 @@
+# Part 3 – HBase (Option A)
+# Start AFTER part1 Kafka stack is already running.
+#
+# NOTE: dajobe/hbase runs its own embedded ZooKeeper on port 2181 internally.
+#       We intentionally do NOT map that port to the host to avoid colliding
+#       with the Kafka ZooKeeper already bound to host:2181 by part1.
+#       happybase connects via the Thrift API on port 9090 only.
+
+services:
+  hbase:
+    image: dajobe/hbase:latest
+    container_name: hbase
+    hostname: hbase
+    ports:
+      - "9090:9090"    # HBase Thrift API  ← happybase connects here
+      - "9095:9095"    # HBase Thrift UI
+      - "16010:16010"  # HBase Master Web UI
+      - "16020:16020"  # HBase RegionServer
+    environment:
+      - HBASE_CONF_hbase_rootdir=file:///hbase-data
+    volumes:
+      - hbase-data:/hbase-data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo status | hbase shell 2>/dev/null | grep -q '1 servers'"]
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
+
+volumes:
+  hbase-data:
