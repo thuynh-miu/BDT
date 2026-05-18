@@ -103,6 +103,22 @@ bash part1/data.sh
 open http://localhost:8080
 ```
 
+This is a **Binance WebSocket trade event** payload. Here's what each field means:
+
+| Field | Value | Description |
+|-------|-------|-------------|
+| `e` | `"trade"` | Event type |
+| `E` | `1778973680727` | Event timestamp (Unix ms) |
+| `s` | `"BTCUSDT"` | Trading pair symbol |
+| `t` | `6301153275` | Trade ID |
+| `p` | `"78235.14000000"` | Price — BTC traded at **$78,235.14** |
+| `q` | `"0.00047000"` | Quantity — **0.00047 BTC** traded |
+| `T` | `1778973680727` | Trade timestamp (Unix ms, same as `E` here) |
+| `m` | `true` | Whether the buyer is the market maker (i.e. the **sell** side initiated the trade) |
+| `M` | `true` | Ignore (legacy field, always `true`) |
+
+In short: a sell of 0.00047 BTC at $78,235.14 occurred on the BTC/USDT pair, triggered by a market sell order hitting a resting buy limit order (maker).
+
 ---
 
 ## Part 3 — Spark Structured Streaming Sink

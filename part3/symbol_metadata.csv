@@ -1,0 +1,21 @@
+symbol,base_asset,quote_asset,asset_category,market_cap_tier,description
+BTCUSDT,BTC,USDT,Layer1,Large Cap,Bitcoin - the original cryptocurrency and digital store of value
+ETHUSDT,ETH,USDT,Layer1,Large Cap,Ethereum - smart contract platform powering DeFi and NFT ecosystems
+BNBUSDT,BNB,USDT,Exchange Token,Large Cap,Binance Coin - native utility token of the Binance ecosystem
+SOLUSDT,SOL,USDT,Layer1,Large Cap,Solana - high-throughput blockchain with sub-second transaction finality
+XRPUSDT,XRP,USDT,Payments,Large Cap,XRP - fast and low-cost cross-border payment settlement protocol
+ADAUSDT,ADA,USDT,Layer1,Mid Cap,Cardano - proof-of-stake blockchain built on peer-reviewed academic research
+AVAXUSDT,AVAX,USDT,Layer1,Large Cap,Avalanche - fast finality platform with customizable subnet architecture
+DOGEUSDT,DOGE,USDT,Meme,Mid Cap,Dogecoin - the original meme coin with a large and active community
+DOTUSDT,DOT,USDT,Layer0,Mid Cap,Polkadot - multi-chain interoperability protocol connecting parachains
+MATICUSDT,MATIC,USDT,Layer2,Mid Cap,Polygon - Ethereum scaling network via sidechains and ZK-rollups
+LINKUSDT,LINK,USDT,Oracle,Mid Cap,Chainlink - decentralized oracle network connecting blockchains to real-world data
+UNIUSDT,UNI,USDT,DeFi,Mid Cap,Uniswap - leading automated market maker and decentralized exchange protocol
+LTCUSDT,LTC,USDT,Layer1,Mid Cap,Litecoin - early Bitcoin fork optimized for faster and cheaper payments
+ATOMUSDT,ATOM,USDT,Layer0,Mid Cap,Cosmos - internet of blockchains enabling IBC cross-chain communication
+XLMUSDT,XLM,USDT,Payments,Mid Cap,Stellar - open network for fast low-cost cross-border asset transfers
+SHIBUSDT,SHIB,USDT,Meme,Mid Cap,Shiba Inu - Ethereum-based meme token with a growing DeFi ecosystem
+NEARUSDT,NEAR,USDT,Layer1,Mid Cap,NEAR Protocol - sharded proof-of-stake blockchain focused on usability
+ALGOUSDT,ALGO,USDT,Layer1,Small Cap,Algorand - pure proof-of-stake blockchain with immediate finality
+FTMUSDT,FTM,USDT,Layer1,Small Cap,Fantom - DAG-based smart contract platform with fast EVM compatibility
+AAVEUSDT,AAVE,USDT,DeFi,Mid Cap,Aave - non-custodial liquidity protocol for lending and borrowing crypto

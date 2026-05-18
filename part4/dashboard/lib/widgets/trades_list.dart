@@ -60,7 +60,7 @@ class TradesList extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: const [
-          SizedBox(width: 44, child: Text('SIDE',   style: style)),
+          SizedBox(width: 60, child: Text('SIDE',   style: style)),
           Expanded(child: Text('PRICE',              style: style, textAlign: TextAlign.right)),
           Expanded(child: Text('QTY',                style: style, textAlign: TextAlign.right)),
           Expanded(child: Text('NOTIONAL',           style: style, textAlign: TextAlign.right)),
@@ -82,23 +82,43 @@ class TradesList extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 44,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: sideColor.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                t.side,
-                style: TextStyle(
-                  color: sideColor,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
+            width: 60,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: sideColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    t.side,
+                    style: TextStyle(
+                      color: sideColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
+                if (t.assetCategory.isNotEmpty &&
+                    t.assetCategory != 'Unknown') ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    t.assetCategory,
+                    style: const TextStyle(
+                      color: Color(0xFF7C6AFA),
+                      fontSize: 8,
+                      letterSpacing: 0.2,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
             ),
           ),
           Expanded(

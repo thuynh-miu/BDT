@@ -1,4 +1,4 @@
-# Part 3 – HBase (Option A)
+# Part 3 – HBase (Option A) + single-node HDFS for static metadata
 # Start AFTER part1 Kafka stack is already running.
 #
 # NOTE: dajobe/hbase runs its own embedded ZooKeeper on port 2181 internally.
@@ -27,5 +27,53 @@ services:
       retries: 8
       start_period: 30s
 
+  # ── Single-node HDFS ──────────────────────────────────────────────────────
+  # Stores symbol_metadata.csv so Spark can read it as a static broadcast
+  # dataset and LEFT JOIN it with the live Kafka stream.
+  #
+  # The DataNode is configured to advertise "localhost" as its transfer
+  # hostname so that Spark running on the host can reach it through the
+  # Docker port mapping on 9866 (instead of the un-routable bridge IP).
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    ports:
+      - "9000:9000"   # HDFS RPC       ← Spark fs.defaultFS
+      - "9870:9870"   # NameNode Web UI  (http://localhost:9870)
+    environment:
+      CLUSTER_NAME: "binance"
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      HDFS_CONF_dfs_replication: "1"
+      HDFS_CONF_dfs_permissions_enabled: "false"
+      # Allow datanode to register with a hostname that differs from its IP
+      HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check: "false"
+    volumes:
+      - hdfs-namenode:/hadoop/dfs/name
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    hostname: datanode
+    depends_on:
+      - namenode
+    ports:
+      - "9864:9864"   # DataNode Web UI  (http://localhost:9864)
+      - "9866:9866"   # DataNode data transfer ← Spark reads blocks here
+      - "9867:9867"   # DataNode IPC
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      HDFS_CONF_dfs_replication: "1"
+      HDFS_CONF_dfs_permissions_enabled: "false"
+      # Advertise "localhost" so the Spark client (on the host) can reach the
+      # datanode through the mapped port 9866 instead of the Docker bridge IP.
+      HDFS_CONF_dfs_datanode_hostname: "localhost"
+      HDFS_CONF_dfs_datanode_address: "0.0.0.0:9866"
+      HDFS_CONF_dfs_datanode_ipc_address: "0.0.0.0:9867"
+    volumes:
+      - hdfs-datanode:/hadoop/dfs/data
+
 volumes:
   hbase-data:
+  hdfs-namenode:
+  hdfs-datanode:

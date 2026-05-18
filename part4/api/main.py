@@ -134,27 +134,39 @@ def get_vwap(symbol: str, minutes: int = 60) -> list[dict]:
 @app.get("/api/trades/{symbol}")
 def get_trades(symbol: str, limit: int = 30) -> list[dict]:
     symbol    = symbol.upper()
-    # Row keys: SYMBOL#<trade_id_padded>  —  scan the symbol prefix
-    start_row = f"{symbol}#".encode()
-    stop_row  = (symbol + "$").encode()   # '$' (0x24) > '#' (0x23)
+    # Row keys: SYMBOL#<trade_id_padded>
+    # Reverse scan from the last possible key for this symbol prefix so
+    # HBase stops after `limit` rows instead of scanning the full table.
+    start_row = f"{symbol}#".encode()    # lower bound (exclusive in reverse)
+    stop_row  = (symbol + "$").encode()  # upper bound (start of reverse scan)
 
     try:
         conn  = _connect()
         table = conn.table(TABLE_TRADES)
         rows: list[dict] = []
-        for _, data in table.scan(row_start=start_row, row_stop=stop_row):
+        for _, data in table.scan(
+            row_start=stop_row,
+            row_stop=start_row,
+            reverse=True,
+            limit=limit,
+        ):
             rows.append({
-                "symbol":   _str(data,   b"cf:symbol",   symbol),
-                "trade_id": _str(data,   b"cf:trade_id"),
-                "price":    _float(data, b"cf:price"),
-                "qty":      _float(data, b"cf:qty"),
-                "notional": _float(data, b"cf:notional"),
-                "side":     _str(data,   b"cf:side"),
-                "trade_ts": _str(data,   b"cf:trade_ts"),
+                "symbol":          _str(data,   b"cf:symbol",   symbol),
+                "trade_id":        _str(data,   b"cf:trade_id"),
+                "price":           _float(data, b"cf:price"),
+                "qty":             _float(data, b"cf:qty"),
+                "notional":        _float(data, b"cf:notional"),
+                "side":            _str(data,   b"cf:side"),
+                "trade_ts":        _str(data,   b"cf:trade_ts"),
+                # enrichment columns joined from static HDFS metadata
+                "base_asset":      _str(data,   b"cf:base_asset"),
+                "quote_asset":     _str(data,   b"cf:quote_asset"),
+                "asset_category":  _str(data,   b"cf:asset_category"),
+                "market_cap_tier": _str(data,   b"cf:market_cap_tier"),
+                "description":     _str(data,   b"cf:description"),
             })
         conn.close()
-        # Trades are sorted by trade_id ASC; take the most recent N
-        return rows[-limit:]
+        return rows   # already most-recent-first from reverse scan
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -179,13 +191,16 @@ def get_summary() -> list[dict]:
 
             if latest:
                 results.append({
-                    "symbol":       symbol,
-                    "vwap_usd":     _float(latest, b"cf:vwap_usd"),
-                    "high_usd":     _float(latest, b"cf:high_usd"),
-                    "low_usd":      _float(latest, b"cf:low_usd"),
-                    "trade_count":  _int(latest,   b"cf:trade_count"),
-                    "total_volume": _float(latest, b"cf:total_volume"),
-                    "window_start": _str(latest,   b"cf:window_start"),
+                    "symbol":          symbol,
+                    "vwap_usd":        _float(latest, b"cf:vwap_usd"),
+                    "high_usd":        _float(latest, b"cf:high_usd"),
+                    "low_usd":         _float(latest, b"cf:low_usd"),
+                    "trade_count":     _int(latest,   b"cf:trade_count"),
+                    "total_volume":    _float(latest, b"cf:total_volume"),
+                    "window_start":    _str(latest,   b"cf:window_start"),
+                    # enrichment columns joined from static HDFS metadata
+                    "asset_category":  _str(latest,   b"cf:asset_category"),
+                    "market_cap_tier": _str(latest,   b"cf:market_cap_tier"),
                 })
         conn.close()
     except Exception as exc:

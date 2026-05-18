@@ -30,6 +30,8 @@ class DashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SymbolSelector(provider: provider),
+                        const SizedBox(height: 12),
+                        _AssetInfoBanner(provider: provider),
                         const SizedBox(height: 16),
                         _StatsRow(provider: provider),
                         const SizedBox(height: 20),
@@ -268,6 +270,24 @@ class _StatsRow extends StatelessWidget {
           value: count,
           icon: Icons.swap_horiz,
         ),
+        if (s != null &&
+            s.assetCategory.isNotEmpty &&
+            s.assetCategory != 'Unknown')
+          StatCard(
+            label: 'CATEGORY',
+            value: s.assetCategory,
+            valueColor: const Color(0xFF7C6AFA),
+            icon: Icons.category_outlined,
+          ),
+        if (s != null &&
+            s.marketCapTier.isNotEmpty &&
+            s.marketCapTier != 'Unknown')
+          StatCard(
+            label: 'CAP TIER',
+            value: s.marketCapTier,
+            valueColor: const Color(0xFF00D4AA),
+            icon: Icons.trending_up,
+          ),
       ],
     );
   }
@@ -277,6 +297,142 @@ class _StatsRow extends StatelessWidget {
     if (v >= 1e3) return '${(v / 1e3).toStringAsFixed(2)}K';
     return v.toStringAsFixed(4);
   };
+}
+
+// ── Asset info banner ─────────────────────────────────────────────────────────
+
+/// Displays enriched metadata (category, tier, description) for the currently
+/// selected symbol.  Data flows from two sources:
+///   • asset_category / market_cap_tier  ← provider.currentSummary (VWAP table)
+///   • base_asset / quote_asset / description ← provider.trades.first (trades table)
+class _AssetInfoBanner extends StatelessWidget {
+  final DashboardProvider provider;
+  const _AssetInfoBanner({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final s = provider.currentSummary;
+    final firstTrade =
+        provider.trades.isNotEmpty ? provider.trades.first : null;
+
+    final baseAsset = (firstTrade?.baseAsset.isNotEmpty == true)
+        ? firstTrade!.baseAsset
+        : provider.selectedSymbol.replaceAll('USDT', '');
+    final quoteAsset = (firstTrade?.quoteAsset.isNotEmpty == true)
+        ? firstTrade!.quoteAsset
+        : 'USDT';
+    final description = firstTrade?.description ?? '';
+    final category    = s?.assetCategory  ?? '';
+    final tier        = s?.marketCapTier  ?? '';
+
+    final hasInfo = category.isNotEmpty && category != 'Unknown';
+    if (!hasInfo && description.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161B22),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF30363D)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar: first letter of base asset
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF00D4AA).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: const Color(0xFF00D4AA).withOpacity(0.3)),
+            ),
+            child: Center(
+              child: Text(
+                baseAsset.isNotEmpty ? baseAsset[0] : '?',
+                style: const TextStyle(
+                  color: Color(0xFF00D4AA),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Pair + category/tier chips
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      '$baseAsset / $quoteAsset',
+                      style: const TextStyle(
+                        color: Color(0xFFE6EDF3),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (category.isNotEmpty && category != 'Unknown')
+                      _Chip(category, const Color(0xFF7C6AFA)),
+                    if (tier.isNotEmpty && tier != 'Unknown')
+                      _Chip(tier, const Color(0xFF00D4AA)),
+                  ],
+                ),
+                // Description from enriched trade record
+                if (description.isNotEmpty) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      color: Color(0xFF8B949E),
+                      fontSize: 11,
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Small rounded label chip used inside _AssetInfoBanner.
+class _Chip extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _Chip(this.label, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withOpacity(0.35)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
 }
 
 // ── Section label ─────────────────────────────────────────────────────────────
